@@ -1,22 +1,25 @@
 # PIE | West Yorkshire Connected Care
 
-A private, HTL-branded **synthetic demonstrator** for testing a person-led, cross-organisational care-coordination model across West Yorkshire.
+A private, HTL-branded demonstrator for testing a person-led, cross-organisational care-intelligence model across West Yorkshire.
 
-> **Status:** Demonstrator and evidence framework. It contains no patient data, service-user data, live NHS data, credentials or live integrations. It is not a clinical decision-support system, a shared-care-record replacement or a production deployment.
+## What this version demonstrates
 
-## The proposition
+PIE is positioned as a **care-state, coordination, predictive analytics and exception-management layer**. It is not another dashboard, a shared-care-record replacement or a device platform.
 
-The demonstrator does not assume that current records, telecare platforms, virtual wards or data assets are inadequate. It tests a more specific operating-model question:
+The current Streamlit app includes:
 
-> Can a trusted cross-organisational view show where a person is in a pathway, who has accepted responsibility, what needs to happen next, by when, how fresh the source information is and whether the person has been told?
-
-PIE is modelled as a **potential care-state, coordination and exception-management layer** that could sit alongside authorised source systems and local services.
+- **Command centre**: pathway ownership, action clocks, source confidence and emerging demand.
+- **Predict & prioritise**: guideline-informed review opportunities with explainable signals.
+- **Intervention studio**: scenario modelling for handover acceptance, targeted monitoring and medicines-review capacity.
+- **Population intelligence**: West Yorkshire place view with population, deprivation and access context.
+- **Evidence & trust**: public-source catalogue, AI boundary and pseudonymisation design.
 
 ## Scope
 
 - **Regional shell:** Bradford District and Craven, Calderdale, Kirklees, Leeds and Wakefield.
-- **Detailed worked pathway:** Leeds frailty and technology-enabled care (TEC).
-- **Data boundary:** public sources support future aggregate calibration. All present pathway states, people, events, clocks and local signals are synthetic.
+- **Detailed pathway lens:** Leeds frailty and technology-enabled care, with CVD/virtual ward logic retained because this was part of Stephen's original pathway discussion.
+- **Identity model:** no first names, no direct identifiers and no NHS numbers in the interface. The app uses opaque PIE person keys.
+- **Evidence model:** public data and national guidance calibrate the shape and review logic. Person-level pathway records remain synthetic unless and until an authorised pilot supplies real operational events.
 
 ## Run locally
 
@@ -30,22 +33,32 @@ python3 -m streamlit run app.py
 
 Open `http://localhost:8501`.
 
+## Streamlit Community Cloud
+
+Use:
+
+```text
+Branch: streamlit-demo
+Main file path: app.py
+```
+
 ## Repository map
 
 ```text
-app.py            Streamlit entry point
-scripts/          Deterministic synthetic-data generator
-assets/branding/  PIE visual tokens and supplied logo asset
-public-data/      Controlled landing area for dated public extracts
-data/synthetic/   Generated locally on first launch from a fixed seed
-docs/             Operating-model, methodology, governance and source notes
-tests/            Baseline validation
+app.py                  Streamlit entry point
+scripts/                Deterministic synthetic-data generator
+assets/branding/        PIE visual tokens and supplied logo asset
+data/reference/         Evidence catalogue for public data and guidance
+data/synthetic/         Generated locally on first launch from a fixed seed
+docs/                   Operating-model, methodology, governance and AI notes
+public-data/            Controlled landing area for dated public extracts
+tests/                  Baseline validation
 ```
 
 ## Brand
 
-PIE visual tokens use the supplied logo artwork: deep PIE blue `#074695`, PIE blue `#0E74BA` and PIE magenta `#BE3F89`. Check these against the final HTL brand book before external publication.
+PIE visual tokens use the supplied logo artwork: deep PIE blue `#074695`, PIE blue `#0E74BA` and PIE magenta `#BE3F89`.
 
-## GitHub and deployment
+## Safety boundary
 
-Keep the repository private. The synthetic cohort and events are regenerated deterministically from `scripts/generate_synthetic_data.py`. Do not add live NHS credentials, API keys, screenshots of live systems, patient-level data or unapproved local documentation. See `docs/governance.md` and `public-data/README.md`.
+Do not add live NHS credentials, API keys, screenshots of live systems, patient-level data or unapproved local documentation. Local formularies, thresholds and pathway timing rules should be added only once they are source-controlled and confirmed with the relevant clinical or operational owner.
