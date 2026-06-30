@@ -1,0 +1,12 @@
+layer,source,purpose,status,use_in_demo
+Population denominator,ONS/Nomis Census 2021 and mid-year population estimates,Place and small-area demographic calibration,Public refresh required before external population claims,Sample weights and age structure
+Inequalities,MHCLG English Indices of Deprivation 2025,Relative deprivation and access context,Official source available,Area-context strata only
+Public health,OHID Fingertips,Published admissions falls long-term-condition and inequality context,Official source available,Population comparison and targeting context
+Medicines,NHSBSA community prescribing and dispensing,Aggregate prescribing variation and medicine-class context,Official source available,Population-level medicines intelligence
+Hypertension,NICE NG136,Review logic for diagnosis treatment monitoring and cardiovascular risk,Last updated February 2026,Guideline tag for CVD review pathway
+Atrial fibrillation,NICE NG196,Stroke bleeding and personalised care review logic,Current NICE guideline,Guideline tag for AF review pathway
+Heart failure,NICE NG106,Monitoring multidisciplinary working and medicines review logic,Last updated September 2025,Guideline tag for heart-failure pathway
+Falls,NICE NG249,Falls identification assessment and prevention logic,Published April 2025,Guideline tag for frailty falls and TEC pathway
+Virtual wards,NHS England Virtual Wards Operational Framework,Hospital at home and remote monitoring operating context,Published August 2024,Remote-monitoring and escalation design
+Neighbourhood health,NHS England Neighbourhood Health Guidelines 2025/26,Population health management MDT and care coordination design,Published January 2025,System operating model
+Local pathways,West Yorkshire / Leeds local clinical pathways and formularies,Local thresholds medicines choices and escalation rules,To be versioned with local owners,Future localisation layer not inferred
