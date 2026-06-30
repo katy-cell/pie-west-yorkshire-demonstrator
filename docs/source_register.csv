@@ -1,0 +1,8 @@
+source_family,purpose_in_demonstrator,permitted_use,limitations
+ONS population estimates,Place denominators and age structure,Future aggregate calibration,Not live operational data
+Nomis Census 2021,Household living arrangements ethnicity disability unpaid care,Future aggregate calibration,Census-time snapshot and aggregate geography
+English Indices of Deprivation 2025,Area-level deprivation context,Future aggregate calibration,Relative area deprivation not individual risk
+OHID Fingertips,Published population health and admissions context,Population-context layer,Not person-level or real-time
+NHSBSA prescribing,Aggregate medicines patterns and variation,Population-context layer,Does not establish adherence review status or individual need
+NHS England published activity,Admissions and discharge context,Population-context layer,Activity counts are not live pathway events
+Local observatories and JSNAs,Place-specific context and strategy,Context and validation,Check licence and update date before reuse
