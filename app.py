@@ -1,67 +1,54 @@
 from __future__ import annotations
 
 from pathlib import Path
-import subprocess
-import sys
 
 import pandas as pd
 import plotly.express as px
 import streamlit as st
 
+from pie_model import MODEL_VERSION, build_model
+
 st.set_page_config(page_title="PIE | West Yorkshire Connected Care", page_icon="◌", layout="wide")
 
 ROOT = Path(__file__).resolve().parent
-DATA_DIR = ROOT / "data" / "synthetic"
-GENERATOR = ROOT / "scripts" / "generate_synthetic_data.py"
 LOGO = ROOT / "assets" / "branding" / "pie_logo_mark_rgb.jpg"
-EVIDENCE = ROOT / "data" / "reference" / "evidence_catalogue.csv"
 
 PIE_DEEP = "#074695"
 PIE_BLUE = "#0E74BA"
 PIE_MAGENTA = "#BE3F89"
 PIE_INK = "#0B2747"
 PIE_SLATE = "#4E657D"
+PIE_MIST = "#F7FAFE"
 
 
-def refresh_demo_data() -> None:
-    """Always recreate deterministic data to prevent stale cloud files after upgrades."""
-    subprocess.run(
-        [sys.executable, str(GENERATOR)],
-        check=True,
-        cwd=str(ROOT),
-        capture_output=True,
-        text=True,
-    )
+@st.cache_data(show_spinner=False)
+def load_model() -> dict[str, pd.DataFrame]:
+    """Build the versioned model in memory: no cached CSV files or stale schemas."""
+    return build_model()
 
 
-def load_data() -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, pd.DataFrame]:
-    refresh_demo_data()
-    people = pd.read_csv(DATA_DIR / "synthetic_population.csv", parse_dates=["next_action_due"])
-    events = pd.read_csv(DATA_DIR / "synthetic_events.csv", parse_dates=["event_time", "received_time"])
-    context = pd.read_csv(DATA_DIR / "place_context.csv")
-    evidence = pd.read_csv(EVIDENCE)
-    return people, events, context, evidence
-
-
-def style() -> None:
+def apply_brand() -> None:
     st.markdown(
         f"""
         <style>
-        .stApp {{ background: linear-gradient(180deg, #F7FAFE 0%, #FFFFFF 38%); }}
-        .block-container {{ max-width: 1460px; padding-top: 1.2rem; padding-bottom: 1.4rem; }}
+        .stApp {{ background: linear-gradient(180deg, {PIE_MIST} 0%, #FFFFFF 39%); }}
+        .block-container {{ max-width: 1500px; padding-top: 1.1rem; padding-bottom: 1.5rem; }}
         [data-testid="stSidebar"] {{ background: #FFFFFF; border-right: 1px solid #DDE8F3; }}
-        h1,h2,h3 {{ color: {PIE_INK}; letter-spacing: -.028em; }}
-        .eyebrow {{ color: {PIE_MAGENTA}; font-weight: 800; text-transform: uppercase; letter-spacing: .13em; font-size: .73rem; }}
-        .hero {{ border: 1px solid #D5E5F3; border-radius: 22px; padding: 1.35rem 1.5rem; margin-bottom: 1.15rem; background: radial-gradient(circle at 92% 10%, rgba(190,63,137,.12), transparent 24%), linear-gradient(120deg, #FFFFFF, #EDF6FD); }}
-        .hero h1 {{ margin: .18rem 0 .45rem; font-size: clamp(2rem, 3vw, 3.15rem); }}
-        .hero p {{ margin: 0; color: {PIE_SLATE}; font-size: 1.03rem; max-width: 980px; }}
-        .metric {{ border: 1px solid #DDE8F5; border-radius: 15px; background: #FFFFFF; min-height: 108px; padding: .85rem .95rem; box-shadow: 0 8px 24px rgba(22,76,130,.045); }}
-        .label {{ color: {PIE_SLATE}; font-size: .75rem; font-weight: 750; }}
-        .value {{ color: {PIE_DEEP}; font-size: 1.72rem; font-weight: 820; line-height: 1.16; margin: .32rem 0 .16rem; }}
-        .sub {{ color: {PIE_SLATE}; font-size: .76rem; }}
+        h1,h2,h3 {{ color: {PIE_INK}; letter-spacing: -.03em; }}
+        .eyebrow {{ color: {PIE_MAGENTA}; font-weight: 800; text-transform: uppercase; letter-spacing: .13em; font-size: .72rem; }}
+        .hero {{ border: 1px solid #D6E4F4; border-radius: 22px; padding: 1.35rem 1.5rem; margin-bottom: 1.1rem; background: radial-gradient(circle at 92% 12%, rgba(190,63,137,.13), transparent 24%), linear-gradient(120deg, #FFFFFF, #EEF6FD); }}
+        .hero h1 {{ margin: .15rem 0 .45rem; font-size: clamp(2rem, 3vw, 3.2rem); }}
+        .hero p {{ margin: 0; max-width: 1020px; color: {PIE_SLATE}; font-size: 1.03rem; }}
+        .metric-card {{ border: 1px solid #DDE8F5; border-radius: 15px; background: #FFFFFF; min-height: 112px; padding: .9rem 1rem; box-shadow: 0 8px 22px rgba(22,76,130,.045); }}
+        .metric-label {{ color: {PIE_SLATE}; font-size: .75rem; font-weight: 750; }}
+        .metric-value {{ color: {PIE_DEEP}; font-size: 1.78rem; font-weight: 820; line-height: 1.14; margin: .3rem 0 .16rem; }}
+        .metric-sub {{ color: {PIE_SLATE}; font-size: .76rem; }}
         .callout {{ border-left: 4px solid {PIE_MAGENTA}; border-radius: 0 12px 12px 0; background: #FFF9FD; padding: .9rem 1rem; color: {PIE_INK}; }}
-        .footer {{ margin-top: 2rem; padding-top: .75rem; border-top: 1px solid #E3EBF5; color: #6B7F95; font-size: .73rem; }}
+        .arch-card {{ border: 1px solid #DDE8F5; border-radius: 14px; background: #FFFFFF; padding: .95rem 1rem; margin-bottom: .65rem; }}
+        .arch-title {{ color: {PIE_DEEP}; font-weight: 800; font-size: .95rem; margin-bottom: .35rem; }}
+        .arch-meta {{ color: {PIE_SLATE}; font-size: .82rem; margin-top:.24rem; }}
         .tag {{ display:inline-block; border:1px solid #D8E6F2; border-radius:999px; background:#FFFFFF; padding:.22rem .55rem; color:{PIE_SLATE}; font-size:.72rem; margin:0 .35rem .35rem 0; }}
+        .footer {{ margin-top: 2rem; padding-top: .75rem; border-top: 1px solid #E3EBF5; color: #6B7F95; font-size: .73rem; }}
         </style>
         """,
         unsafe_allow_html=True,
@@ -75,277 +62,394 @@ def hero(title: str, subtitle: str) -> None:
     )
 
 
-def card(label: str, value: str | int, subtitle: str) -> None:
+def metric(label: str, value: int | str, subtitle: str) -> None:
     st.markdown(
-        f"<div class='metric'><div class='label'>{label}</div><div class='value'>{value}</div><div class='sub'>{subtitle}</div></div>",
+        f"<div class='metric-card'><div class='metric-label'>{label}</div><div class='metric-value'>{value}</div><div class='metric-sub'>{subtitle}</div></div>",
         unsafe_allow_html=True,
     )
 
 
 def footer() -> None:
     st.markdown(
-        "<div class='footer'>PIE™ West Yorkshire Connected Care demonstrator · public evidence framework + deterministic synthetic person-level simulation · decision support with human review</div>",
+        "<div class='footer'>PIE™ West Yorkshire Connected Care · published population baseline and evidence framework · modelled care opportunities and operational exemplars · no live patient, service-user or operational data</div>",
         unsafe_allow_html=True,
     )
 
 
-def app_sidebar() -> str:
+def empty_state(message: str) -> None:
+    st.info(message, icon="◌")
+
+
+def sidebar() -> str:
     with st.sidebar:
         if LOGO.exists():
-            st.image(str(LOGO), width=88)
+            st.image(str(LOGO), width=92)
         st.markdown("### PIE™")
         st.caption("Patient Insight Engine")
         st.divider()
         page = st.radio(
             "Navigate",
             [
-                "Command centre",
-                "Predict & prioritise",
+                "PIE command centre",
+                "Predict and act",
                 "Intervention studio",
-                "Population intelligence",
-                "Evidence & trust",
+                "Population and equity",
+                "Architecture and assurance",
             ],
         )
         st.divider()
-        st.caption("West Yorkshire · Leeds detailed pathway")
-        st.caption("HTL demonstration environment")
+        st.caption("West Yorkshire system view")
+        st.caption("Leeds frailty and TEC pathway lens")
+        st.caption(f"Model release {MODEL_VERSION}")
     return page
 
 
-def command_centre(people: pd.DataFrame) -> None:
+def command_centre(population: pd.DataFrame, forecast: pd.DataFrame) -> None:
     hero(
-        "One operating view across a connected care pathway.",
-        "PIE makes responsibility, next action, source confidence and emerging demand visible across a person-led West Yorkshire care pathway.",
+        "From fragmented data to accountable action.",
+        "PIE is a care-state, orchestration and intelligence layer. It models where attention is likely to matter next, makes the reason visible and supports teams to act across organisational boundaries.",
     )
-    priority_1 = int((people["priority_band"] == "Priority 1").sum())
-    ownership_gap = int((people["care_owner"] == "Receiving service not yet confirmed").sum())
-    overdue = int((people["due_status"] == "Overdue").sum())
-    forecast = int((people["review_opportunity_30d_pct"] >= 55).sum())
-    for col, values in zip(
-        st.columns(4),
-        [
-            ("Priority action queue", priority_1, "modelled operational + review signal"),
-            ("Ownership to confirm", ownership_gap, "handover requires acceptance"),
-            ("Actions beyond due time", overdue, "pathway clock requires attention"),
-            ("30-day review opportunities", forecast, "proactive workload forecast"),
-        ],
-    ):
+    total_population = int(population["population"].sum())
+    opportunities = int(forecast["expected_30d"].sum())
+    priority = int(forecast["priority_30d"].sum())
+    transitions = int(round(forecast.loc[forecast["pathway"] == "Post-discharge coordination", "expected_30d"].sum() * 0.37))
+    cards = [
+        ("West Yorkshire population", f"{total_population:,}", "published 2024 resident population baseline"),
+        ("30-day care opportunities", f"{opportunities:,}", "modelled from public baseline and pathway scenario rates"),
+        ("Priority attention windows", f"{priority:,}", "modelled opportunities requiring earlier co-ordination"),
+        ("Transition friction signals", f"{transitions:,}", "modelled post-discharge ownership / follow-up focus"),
+    ]
+    for col, item in zip(st.columns(4), cards):
         with col:
-            card(*values)
+            metric(*item)
 
-    st.markdown("### What changes for teams")
+    st.markdown("### The PIE operating question")
     st.markdown(
-        "<div class='callout'>PIE proposes a shared operating view of the pathway: <strong>what changed, who owns the next action, what needs doing first and how confident the team can be in the signal.</strong></div>",
+        "<div class='callout'><strong>What changed, who owns the next action, what should happen next, by when and what is most likely to worsen if no-one acts?</strong> PIE connects those questions to a visible care state, an explainable signal and an action route.</div>",
         unsafe_allow_html=True,
     )
-    summary = people.groupby("place", as_index=False).agg(
-        Synthetic_cases=("person_key", "count"),
-        Priority_1=("priority_band", lambda x: int((x == "Priority 1").sum())),
-        Review_workload=("review_opportunity_30d_pct", lambda x: int((x >= 55).sum())),
-    )
-    fig = px.bar(summary, x="place", y="Review_workload", color="Priority_1", text="Synthetic_cases", color_continuous_scale="Blues")
-    fig.update_layout(title="Modelled proactive review workload by place", xaxis_title="", yaxis_title="Synthetic people meeting review threshold", coloraxis_colorbar_title="Priority 1")
-    st.plotly_chart(fig, use_container_width=True)
-    st.markdown("### Strategic fit")
-    st.write("The design follows the preferred separation of devices, data storage and a distinct presentation-and-intelligence layer. PIE is demonstrated in that third layer, supporting local services and established infrastructure rather than replacing them.")
+
+    left, right = st.columns([1.25, 1])
+    with left:
+        by_place = forecast.groupby(["place", "pathway"], as_index=False)["expected_30d"].sum()
+        fig = px.bar(
+            by_place,
+            x="place",
+            y="expected_30d",
+            color="pathway",
+            barmode="stack",
+            color_discrete_sequence=[PIE_DEEP, PIE_BLUE, PIE_MAGENTA, "#58748F"],
+        )
+        fig.update_layout(
+            title="Expected 30-day care opportunities by place and pathway",
+            xaxis_title="",
+            yaxis_title="Modelled care opportunities",
+            legend_title="Pathway",
+        )
+        st.plotly_chart(fig, use_container_width=True)
+    with right:
+        horizon = forecast.groupby("pathway", as_index=False)[["expected_7d", "expected_14d", "expected_30d"]].sum().melt(
+            id_vars="pathway", var_name="horizon", value_name="opportunities"
+        )
+        horizon["horizon"] = horizon["horizon"].map({"expected_7d": "7 days", "expected_14d": "14 days", "expected_30d": "30 days"})
+        fig = px.line(
+            horizon,
+            x="horizon",
+            y="opportunities",
+            color="pathway",
+            markers=True,
+            category_orders={"horizon": ["7 days", "14 days", "30 days"]},
+            color_discrete_sequence=[PIE_DEEP, PIE_BLUE, PIE_MAGENTA, "#58748F"],
+        )
+        fig.update_layout(title="Forecast horizon", xaxis_title="", yaxis_title="Modelled opportunities")
+        st.plotly_chart(fig, use_container_width=True)
+
+    st.markdown("### From source to action")
+    sequence = [
+        ("1", "Ingest", "Authorised EPR, primary care, community, device, prescribing and public-data inputs"),
+        ("2", "Understand", "FHIR normalisation, terminology, pseudonymisation, provenance and care-state construction"),
+        ("3", "Predict", "Explainable cohort signals, demand forecasting, risk and action prioritisation"),
+        ("4", "Orchestrate", "Named owner, next action, deadline, notification and exception route"),
+        ("5", "Learn", "Outcome feedback, fairness monitoring, pathway variation and service improvement"),
+    ]
+    cols = st.columns(5)
+    for col, (number, label, description) in zip(cols, sequence):
+        with col:
+            st.markdown(f"<div class='arch-card'><div class='eyebrow'>{number}</div><div class='arch-title'>{label}</div><div class='arch-meta'>{description}</div></div>", unsafe_allow_html=True)
     footer()
 
 
-def predict_prioritise(people: pd.DataFrame) -> None:
+def predict_and_act(work_items: pd.DataFrame, forecast: pd.DataFrame) -> None:
     hero(
         "Predict where attention will matter most.",
-        "A transparent prioritisation model combines pathway reliability with guideline-informed review signals, so care teams can focus their next conversation and action.",
+        "The control view combines population demand modelling, pathway state and evidence-backed review logic. It surfaces a focused action list rather than another static reporting queue.",
     )
-    c1, c2, c3 = st.columns(3)
-    places = sorted(people["place"].dropna().unique().tolist())
-    pathways = sorted(people["pathway"].dropna().unique().tolist())
-    priority_bands = ["Priority 1", "Priority 2", "Priority 3", "Routine"]
-    with c1:
+    col1, col2, col3 = st.columns(3)
+    places = sorted(work_items["place"].unique().tolist())
+    pathways = sorted(work_items["pathway"].unique().tolist())
+    with col1:
         selected_place = st.selectbox("Place", ["All West Yorkshire"] + places)
-    with c2:
+    with col2:
         selected_pathways = st.multiselect("Pathway", pathways, default=pathways)
-    with c3:
-        selected_bands = st.multiselect("Priority", priority_bands, default=priority_bands)
+    with col3:
+        selected_window = st.multiselect("Attention window", ["0–7 days", "8–14 days", "15–30 days"], default=["0–7 days", "8–14 days", "15–30 days"])
 
-    view = people.loc[
-        people["pathway"].isin(selected_pathways) & people["priority_band"].isin(selected_bands)
+    view = work_items.loc[
+        work_items["pathway"].isin(selected_pathways) & work_items["attention_window"].isin(selected_window)
     ].copy()
     if selected_place != "All West Yorkshire":
         view = view.loc[view["place"] == selected_place].copy()
-    view = view.sort_values(
-        ["priority_band", "operational_priority_score", "review_opportunity_30d_pct"],
-        ascending=[True, False, False],
-    )
+    if view.empty:
+        empty_state("No modelled care opportunities match these selections. Adjust the pathway, place or attention-window filters.")
+        footer()
+        return
 
-    st.markdown("### Prioritised review queue")
-    columns = [
-        "person_key", "place", "pathway", "current_state", "care_owner", "next_action",
-        "due_status", "source_freshness", "operational_priority_score",
-        "review_opportunity_30d_pct", "top_explainers", "evidence_tags",
-    ]
-    display = view[columns].rename(
-        columns={
-            "person_key": "PIE person key",
-            "place": "Place",
-            "pathway": "Pathway",
-            "current_state": "Current state",
-            "care_owner": "Current owner",
-            "next_action": "Recommended next action",
-            "due_status": "Action clock",
-            "source_freshness": "Data confidence",
-            "operational_priority_score": "Operational score",
-            "review_opportunity_30d_pct": "30-day review opportunity (%)",
-            "top_explainers": "Why this has surfaced",
-            "evidence_tags": "Evidence basis",
-        }
-    )
-    st.dataframe(display, use_container_width=True, hide_index=True)
-    left, right = st.columns(2)
-    with left:
-        fig = px.histogram(
-            view,
-            x="review_opportunity_30d_pct",
-            color="priority_band",
-            barmode="overlay",
-            nbins=16,
-            color_discrete_sequence=[PIE_MAGENTA, PIE_DEEP, PIE_BLUE, "#9EADBC"],
-        )
-        fig.update_layout(title="Modelled 30-day review opportunity", xaxis_title="Probability (%)", yaxis_title="Synthetic people")
-        st.plotly_chart(fig, use_container_width=True)
-    with right:
-        st.markdown("### Explainable by design")
-        st.write("Every surfaced case has leading signals, an action type and the evidence family behind the review logic. A missing owner or an overdue action can drive operational priority even where there is no deterioration signal.")
-        for tag in ["NICE NG249", "NICE NG136", "NICE NG196", "NICE NG106", "Virtual wards", "Neighbourhood health"]:
-            st.markdown(f"<span class='tag'>{tag}</span>", unsafe_allow_html=True)
-    footer()
-
-
-def intervention_studio(people: pd.DataFrame) -> None:
-    hero(
-        "Test the impact of a different service response.",
-        "A scenario environment for exploring how pathway ownership, targeted monitoring and medicines-review capacity could change synthetic workload before a real-world pilot is commissioned.",
-    )
-    one, two, three = st.columns(3)
-    with one:
-        handover = st.slider("Improve accepted handovers", 0, 100, 25, 5)
-    with two:
-        monitoring = st.slider("Expand targeted monitoring review", 0, 100, 20, 5)
-    with three:
-        medicines = st.slider("Increase medicines review capacity", 0, 100, 15, 5)
-
-    gaps = int((people["care_owner"] == "Receiving service not yet confirmed").sum())
-    review = int((people["review_opportunity_30d_pct"] >= 55).sum())
-    medicines_due = int((people["pathway"] == "Medicines optimisation").sum())
-    resolved = round(gaps * handover / 100)
-    enabled = round(review * monitoring / 100)
-    completed = round(medicines_due * medicines / 100)
-    remaining = max(0, int((people["priority_band"] == "Priority 1").sum()) - resolved - round(enabled * .25))
-
-    for col, values in zip(
-        st.columns(4),
+    view = view.sort_values(["priority", "pie_attention_index"], ascending=[True, False])
+    selected_forecast = forecast.loc[forecast["pathway"].isin(selected_pathways)].copy()
+    if selected_place != "All West Yorkshire":
+        selected_forecast = selected_forecast.loc[selected_forecast["place"] == selected_place]
+    urgent = int((view["priority"] == "Priority attention").sum())
+    for col, item in zip(
+        st.columns(3),
         [
-            ("Handover gaps resolved", resolved, "within the scenario window"),
-            ("Proactive reviews enabled", enabled, "additional modelled capacity"),
-            ("Medicines reviews completed", completed, "additional modelled capacity"),
-            ("Remaining priority queue", remaining, "synthetic scenario output"),
+            ("Modelled action records", f"{len(view):,}", "representative care-state and workflow exemplars"),
+            ("Priority attention", f"{urgent:,}", "records ranked by pathway state and action need"),
+            ("30-day pathway demand", f"{int(selected_forecast['expected_30d'].sum()):,}", "modelled care opportunities for current selection"),
         ],
     ):
         with col:
-            card(*values)
-    st.markdown("### AI-supported service design")
-    st.markdown(
-        "<div class='callout'>The AI role is not to decide treatment. It is to help teams model demand, surface people who may benefit from earlier review, explain why and test how service capacity or pathway changes could alter the queue.</div>",
-        unsafe_allow_html=True,
-    )
-    scenario = pd.DataFrame(
-        {
-            "Intervention": ["Accepted handovers", "Targeted monitoring reviews", "Medicines review capacity"],
-            "Modelled additional actions": [resolved, enabled, completed],
+            metric(*item)
+
+    st.markdown("### Action list")
+    table = view[
+        [
+            "pie_work_item",
+            "place",
+            "pathway",
+            "attention_window",
+            "priority",
+            "care_state",
+            "pie_attention_index",
+            "why_now",
+            "recommended_next_action",
+            "model_confidence",
+        ]
+    ].rename(
+        columns={
+            "pie_work_item": "PIE work item",
+            "place": "Place",
+            "pathway": "Pathway",
+            "attention_window": "Attention window",
+            "priority": "Priority",
+            "care_state": "Care state",
+            "pie_attention_index": "PIE attention index",
+            "why_now": "Why now",
+            "recommended_next_action": "Recommended action",
+            "model_confidence": "Signal confidence",
         }
     )
-    fig = px.bar(scenario, x="Intervention", y="Modelled additional actions", text="Modelled additional actions", color="Intervention", color_discrete_sequence=[PIE_DEEP, PIE_BLUE, PIE_MAGENTA])
-    fig.update_layout(showlegend=False, xaxis_title="", yaxis_title="Actions within scenario")
-    st.plotly_chart(fig, use_container_width=True)
+    st.dataframe(table, use_container_width=True, hide_index=True)
+
+    left, right = st.columns([1.1, 0.9])
+    with left:
+        selection = st.selectbox("Inspect a modelled operational record", view["pie_work_item"].tolist())
+        detail = view.loc[view["pie_work_item"] == selection].iloc[0]
+        st.markdown("### PIE operational synthesis")
+        st.markdown(
+            f"<div class='callout'><strong>{detail['care_state']}</strong><br><br>"
+            f"This item has surfaced in the <strong>{detail['attention_window']}</strong> attention window for <strong>{detail['pathway']}</strong>. "
+            f"PIE combines the available source chain, pathway state and evidence configuration to recommend: <strong>{detail['recommended_next_action']}</strong>.</div>",
+            unsafe_allow_html=True,
+        )
+        st.caption(f"Evidence basis: {detail['evidence_basis']} · Source lineage: {detail['source_chain']}")
+    with right:
+        priority_counts = view.groupby(["pathway", "priority"], as_index=False).size().rename(columns={"size": "records"})
+        fig = px.bar(
+            priority_counts,
+            x="pathway",
+            y="records",
+            color="priority",
+            barmode="stack",
+            color_discrete_map={"Priority attention": PIE_MAGENTA, "Planned review": PIE_BLUE},
+        )
+        fig.update_layout(title="Action-record mix", xaxis_title="", yaxis_title="Modelled records")
+        st.plotly_chart(fig, use_container_width=True)
     footer()
 
 
-def population_intelligence(people: pd.DataFrame, context: pd.DataFrame) -> None:
+def intervention_studio(forecast: pd.DataFrame) -> None:
     hero(
-        "Use population evidence to plan a fairer pathway.",
-        "Public demographic, deprivation, prescribing and admissions sources calibrate the context. Synthetic person-level scenarios make the operating model tangible without exposing real people.",
+        "Test how a service change could alter the next 30 days.",
+        "PIE does not only report pressure. It models practical choices, such as strengthening handover acceptance, expanding targeted monitoring or increasing medicines-review capacity, before a service commits to a pilot.",
     )
-    left, right = st.columns(2)
+    first, second, third, fourth = st.columns(4)
+    with first:
+        handover = st.slider("Accepted handovers", 0, 100, 35, 5, help="Share of modelled transition friction addressed by a clearer acceptance workflow.")
+    with second:
+        monitoring = st.slider("Targeted monitoring capacity", 0, 100, 25, 5, help="Share of modelled CVD and frailty review opportunities brought forward.")
+    with third:
+        medicines = st.slider("Structured medicines reviews", 0, 100, 20, 5, help="Share of modelled medicines opportunities addressed earlier.")
+    with fourth:
+        tec = st.slider("TEC / home-first response", 0, 100, 25, 5, help="Share of modelled frailty and falls opportunities supported through a faster response.")
+
+    post_discharge = int(forecast.loc[forecast["pathway"] == "Post-discharge coordination", "priority_30d"].sum())
+    monitoring_pool = int(forecast.loc[forecast["pathway"].isin(["CVD remote monitoring", "Frailty, falls and TEC"]), "priority_30d"].sum())
+    medicines_pool = int(forecast.loc[forecast["pathway"] == "Medicines optimisation", "priority_30d"].sum())
+    frailty_pool = int(forecast.loc[forecast["pathway"] == "Frailty, falls and TEC", "priority_30d"].sum())
+    handover_shift = int(round(post_discharge * handover / 100 * 0.48))
+    monitoring_shift = int(round(monitoring_pool * monitoring / 100 * 0.32))
+    medicines_shift = int(round(medicines_pool * medicines / 100 * 0.34))
+    tec_shift = int(round(frailty_pool * tec / 100 * 0.30))
+    total_shift = handover_shift + monitoring_shift + medicines_shift + tec_shift
+    baseline_priority = int(forecast["priority_30d"].sum())
+    remaining = max(0, baseline_priority - total_shift)
+
+    cards = [
+        ("Co-ordination actions brought forward", f"{handover_shift:,}", "modelled effect of stronger ownership acceptance"),
+        ("Targeted reviews enabled", f"{monitoring_shift + medicines_shift:,}", "modelled capacity shift across monitoring and medicines"),
+        ("Home-first response opportunities", f"{tec_shift:,}", "modelled frailty / TEC action shift"),
+        ("Priority queue after scenario", f"{remaining:,}", "modelled residual attention requirement"),
+    ]
+    for col, item in zip(st.columns(4), cards):
+        with col:
+            metric(*item)
+
+    scenario = pd.DataFrame(
+        {
+            "Measure": ["Baseline priority attention", "Brought forward through scenario", "Remaining priority attention"],
+            "Modelled opportunities": [baseline_priority, total_shift, remaining],
+        }
+    )
+    left, right = st.columns([1.15, 0.85])
     with left:
-        age = people.groupby(["place", "age_band"], as_index=False).size().rename(columns={"size": "Synthetic people"})
-        fig = px.bar(age, x="place", y="Synthetic people", color="age_band", barmode="stack", color_discrete_sequence=["#9EADBC", PIE_BLUE, PIE_DEEP, PIE_MAGENTA])
-        fig.update_layout(title="Implementation-sample age structure", xaxis_title="", yaxis_title="Synthetic people")
+        fig = px.bar(
+            scenario,
+            x="Measure",
+            y="Modelled opportunities",
+            text="Modelled opportunities",
+            color="Measure",
+            color_discrete_sequence=[PIE_DEEP, PIE_MAGENTA, PIE_BLUE],
+        )
+        fig.update_layout(showlegend=False, title="Scenario effect on the 30-day action queue", xaxis_title="", yaxis_title="Modelled care opportunities")
         st.plotly_chart(fig, use_container_width=True)
     with right:
-        imd = people.groupby(["place", "imd_quintile"], as_index=False).size().rename(columns={"size": "Synthetic people"})
-        fig = px.bar(imd, x="place", y="Synthetic people", color="imd_quintile", barmode="stack", color_continuous_scale="PuBu")
-        fig.update_layout(title="Area deprivation context within the synthetic sample", xaxis_title="", yaxis_title="Synthetic people")
-        st.plotly_chart(fig, use_container_width=True)
-    st.markdown("### From population insight to pathway design")
-    st.write("The regional view is designed to reveal whether priority, response capacity and access routes are aligned. SDOH fields shape how an offer is delivered, for example a non-digital route, interpreter support, carer contact or proactive outreach. They do not determine an individual outcome.")
-    st.dataframe(
-        context.rename(
-            columns={
-                "synthetic_sample": "Synthetic sample",
-                "population_weight": "Population weight",
-                "evidence_basis": "Calibration basis",
-                "context_status": "Status",
-            }
-        ),
-        use_container_width=True,
-        hide_index=True,
-    )
+        st.markdown("### What the AI is doing")
+        st.write(
+            "PIE uses an explainable demand-and-care-state model to test the operational effect of a change. In a production implementation, the same layer would learn from observed pathway outcomes, capacity and service response, under clinical safety and model-governance controls."
+        )
+        st.markdown("<span class='tag'>Demand forecast</span><span class='tag'>Care-state orchestration</span><span class='tag'>Explainable prioritisation</span><span class='tag'>Scenario modelling</span>", unsafe_allow_html=True)
     footer()
 
 
-def evidence_trust(evidence: pd.DataFrame) -> None:
+def population_and_equity(population: pd.DataFrame, forecast: pd.DataFrame) -> None:
     hero(
-        "Evidence, identity and trust are built in.",
-        "A compact demonstration view, backed by a transparent methodology: public data for population context, published guidance for review logic and synthetic records for person-level workflow.",
+        "Represent the region as it is, not as a balanced mock cohort.",
+        "This view starts with published place populations and median ages. PIE then models expected care opportunities against that real regional shape, so variation by place is visible before live data is connected.",
     )
-    st.markdown("### Evidence catalogue")
-    st.dataframe(evidence[["layer", "source", "purpose", "status", "use_in_demo"]], use_container_width=True, hide_index=True)
     left, right = st.columns(2)
     with left:
-        st.markdown("### Pseudonymisation design")
-        st.write("The interface uses only an opaque PIE person key. In a future authorised deployment, a tenant-held pseudonymisation service could create a stable key from an NHS number using a cryptographic HMAC and retain the re-identification mapping separately behind role-based access. PIE would work with the key, not display the NHS number.")
+        fig = px.bar(
+            population,
+            x="place",
+            y="population",
+            text="population",
+            color="median_age",
+            color_continuous_scale="Blues",
+        )
+        fig.update_traces(texttemplate="%{text:,}", textposition="outside")
+        fig.update_layout(title="Published 2024 population by place", xaxis_title="", yaxis_title="Residents", coloraxis_colorbar_title="Median age")
+        st.plotly_chart(fig, use_container_width=True)
     with right:
-        st.markdown("### AI capability boundary")
-        st.write("The demonstrator shows transparent feature-based review prioritisation, demand forecasting and intervention simulation. A production model would require local validation, bias and performance testing, clinical safety governance and monitoring before it was used to influence care delivery.")
-    st.markdown("### Current model structure")
+        demand = forecast.groupby(["place", "pathway"], as_index=False)["opportunities_per_10k"].sum()
+        fig = px.bar(
+            demand,
+            x="place",
+            y="opportunities_per_10k",
+            color="pathway",
+            barmode="group",
+            color_discrete_sequence=[PIE_DEEP, PIE_BLUE, PIE_MAGENTA, "#58748F"],
+        )
+        fig.update_layout(title="Expected opportunity rate per 10,000 residents", xaxis_title="", yaxis_title="Modelled 30-day opportunities per 10,000")
+        st.plotly_chart(fig, use_container_width=True)
+
+    st.markdown("### Published baseline and modelling inputs")
+    baseline_view = population[["place", "population", "population_share", "median_age", "context", "published_baseline"]].copy()
+    baseline_view["population_share"] = (baseline_view["population_share"] * 100).round(1).astype(str) + "%"
+    baseline_view = baseline_view.rename(
+        columns={
+            "place": "Place",
+            "population": "Published population",
+            "population_share": "West Yorkshire share",
+            "median_age": "Median age",
+            "context": "Population context",
+            "published_baseline": "Source",
+        }
+    )
+    st.dataframe(baseline_view, use_container_width=True, hide_index=True)
+    st.markdown("### Equity by design")
     st.markdown(
-        "- **Operational intelligence:** ownership, action clock, source freshness and communication status\n"
-        "- **Guideline-informed review opportunity:** evidence-tagged features and transparent explainers\n"
-        "- **Population intelligence:** public-source calibration at place and small-area level\n"
-        "- **Scenario analytics:** capacity and pathway-change modelling\n"
-        "- **AI synthesis:** concise, explainable summaries for an MDT or operational lead"
+        "The production PIE model is designed to add protected and access-relevant variables only where there is a clear care or service-design purpose, such as non-digital access, interpreter need, carer involvement, rurality, deprivation context or barrier to follow-up. These fields should support fairer access and outreach, not become an automated decision about an individual."
     )
+    footer()
+
+
+def architecture_and_assurance(architecture: pd.DataFrame, evidence: pd.DataFrame) -> None:
+    hero(
+        "Show the full PIE proposition, not a standalone dashboard.",
+        "This demonstrator represents the presentation, intelligence and scenario layer of PIE. The production architecture adds governed ingestion, interoperability, pseudonymisation, FHIR persistence, feature engineering, explainability and action orchestration.",
+    )
+    st.markdown("### Architecture-led product story")
+    for _, row in architecture.iterrows():
+        st.markdown(
+            f"<div class='arch-card'><div class='arch-title'>{row['layer']}</div>"
+            f"<div><strong>Production capability:</strong> {row['production_capability']}</div>"
+            f"<div class='arch-meta'><strong>This demonstrator:</strong> {row['demonstrator_representation']}</div>"
+            f"<div class='arch-meta'><strong>Value:</strong> {row['value']}</div></div>",
+            unsafe_allow_html=True,
+        )
+
+    left, right = st.columns([1.1, 0.9])
+    with left:
+        st.markdown("### AI capabilities represented here")
+        capabilities = pd.DataFrame(
+            [
+                {"Capability": "Care-state intelligence", "What it answers": "What changed, who owns the next action, what is due and what has not been accepted?"},
+                {"Capability": "Population demand forecasting", "What it answers": "What care opportunities are expected across 7, 14 and 30 days by place and pathway?"},
+                {"Capability": "Explainable prioritisation", "What it answers": "Why has a work item surfaced and what evidence / signal chain supports it?"},
+                {"Capability": "Intervention simulation", "What it answers": "How could changes in handovers, monitoring, medicines or TEC capacity shift the queue?"},
+                {"Capability": "Ambient and unstructured-data pathway", "What it answers": "How could approved speech / text extraction create structured observations, tasks and care-state updates?"},
+            ]
+        )
+        st.dataframe(capabilities, use_container_width=True, hide_index=True)
+    with right:
+        st.markdown("### Production boundary")
+        st.write(
+            "The architecture supports integration with approved sources and outputs such as EPRs, primary-care systems, public data, community systems, remote-monitoring devices and partner reporting. This Streamlit environment is deliberately only the presentation and simulation layer: it is not connected to NHS FDP, a shared-care record, HAPI FHIR, AWS, or a live service workflow."
+        )
+        st.markdown("### Identity pattern")
+        st.write(
+            "A future authorised deployment would use a tenant-held pseudonymisation service to create a stable PIE key from an NHS number. The re-identification mapping would remain separate, access-controlled and outside the analytics / presentation layer. The app therefore shows only opaque work-item keys."
+        )
+
+    st.markdown("### Evidence catalogue")
+    st.dataframe(evidence, use_container_width=True, hide_index=True)
     footer()
 
 
 def main() -> None:
-    style()
-    try:
-        people, _events, context, evidence = load_data()
-    except subprocess.CalledProcessError as error:
-        st.error("The synthetic data model did not refresh correctly.")
-        st.code(error.stderr or str(error))
-        return
-    page = app_sidebar()
-    if page == "Command centre":
-        command_centre(people)
-    elif page == "Predict & prioritise":
-        predict_prioritise(people)
+    apply_brand()
+    model = load_model()
+    page = sidebar()
+    if page == "PIE command centre":
+        command_centre(model["population"], model["forecast"])
+    elif page == "Predict and act":
+        predict_and_act(model["work_items"], model["forecast"])
     elif page == "Intervention studio":
-        intervention_studio(people)
-    elif page == "Population intelligence":
-        population_intelligence(people, context)
+        intervention_studio(model["forecast"])
+    elif page == "Population and equity":
+        population_and_equity(model["population"], model["forecast"])
     else:
-        evidence_trust(evidence)
+        architecture_and_assurance(model["architecture"], model["evidence"])
 
 
 if __name__ == "__main__":
