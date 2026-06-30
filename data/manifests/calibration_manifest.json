@@ -1,0 +1,34 @@
+{
+  "project": "PIE | West Yorkshire Connected Care",
+  "build_date": "2026-06-30",
+  "synthetic_seed": 20260630,
+  "status": "framework_ready_not_yet_publicly_calibrated",
+  "scope": {
+    "system": "NHS West Yorkshire ICB",
+    "places": ["Bradford District and Craven", "Calderdale", "Kirklees", "Leeds", "Wakefield"],
+    "detailed_pathway": "Leeds frailty and technology-enabled care"
+  },
+  "data_boundary": {
+    "public_data": "Future aggregate calibration only",
+    "synthetic_data": "All current people, events, clocks, providers and operational signals",
+    "authorised_data": "Required for any live pilot or individual-level workflow"
+  },
+  "required_public_source_families": [
+    "ONS/Nomis Census",
+    "ONS population estimates",
+    "English Indices of Deprivation 2025",
+    "OHID Fingertips",
+    "NHSBSA prescribing",
+    "NHS England published activity",
+    "ODS reference data",
+    "local observatories and JSNAs"
+  ],
+  "validation_gates": [
+    "dated official extracts downloaded",
+    "geography mapping reviewed",
+    "source terms recorded",
+    "synthetic versus source distributions compared",
+    "limitations visible in application",
+    "clinical and operational definitions locally validated"
+  ]
+}
